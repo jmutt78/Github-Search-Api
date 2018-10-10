@@ -1,43 +1,39 @@
-'use strict'
+const GITHUB_SEARCH_URL = 'https://api.github.com/search/repositories';
 
-const apiKey =
-
-const searchUrl = `https://api.github.com/users/jmutt78/repos`;
-
-//Event listerner that gets users submission//
-function inputSubmit(){
-$('#search-bar').on('keyup', function(e){
-  let searchQeury = e.target.value;
-});
-
+function getDataFromApi(searched, callback) {
+  const query = {
+    q: `${searched} in:name`,
+    per_page: 10
+  }
+  $.getJSON(GITHUB_SEARCH_URL, query, callback);
 }
 
-//Ajax request to get object information
-function getGetHubData(){
 
-
-  fetch(url, options)
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      }
-      throw new Error(response.statusText);
-    })
-    .then(responseJson => displayResults(responseJson, maxResults))
-    .catch(err => {
-      $('#js-error-message').text(`Something went wrong: ${err.message}`);
-    });
-
-}
-//dispalys thumbnail and title
-function dataDisplay(){
-
+function renderResult(result) {
+  return `
+    <div>
+      <h2>
+      <a class="js-result-name" href="${result.html_url}" target="_blank">${result.name}</a> by <a class="js-user-name" href="${result.owner.html_url}" target="_blank">${result.owner.login}</a></h2>
+      <p>Number of watchers: <span class="js-watchers-count">${result.watchers_count}</span></p>
+      <p>Number of open issues: <span class="js-issues-count">${result.open_issues}</span></p>
+    </div>
+  `;
 }
 
-//function handler
-function handleGethubApi(){
-inputSubmit();
-
+function displayData(data) {
+  const results = data.items.map((item, index) => renderResult(item));
+  $('#search-results').html(results);
 }
 
-$(handleGethubApi);
+function handleSubmit() {
+  $('#search-bar').submit(event => {
+    event.preventDefault();
+    const queryTarget = $(event.currentTarget).find('#search-input');
+    const query = queryTarget.val();
+    // clear out the input
+    queryTarget.val("");
+    getDataFromApi(query, displayData);
+  });
+}
+
+$(handleSubmit);
